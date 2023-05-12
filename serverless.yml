@@ -1,0 +1,23 @@
+service: order-serverlessly
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  createOrder:
+    handler: handler.createOrder
+    events:
+     - httpApi:
+         path: /order
+         method: post
+
+resources:
+  Resources:
+    orderEventStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: order-events
+        ShardCount: 1
