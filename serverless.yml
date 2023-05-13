@@ -13,11 +13,25 @@ functions:
      - httpApi:
          path: /order
          method: post
+    environment:
+      orderTableName: orders
+      orderStreamName: order-events
 
 resources:
   Resources:
-    orderEventStream:
+    ordersEventStream:
       Type: AWS::Kinesis::Stream
       Properties:
         Name: order-events
         ShardCount: 1
+    ordersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: orders
+        AttributeDefinitions:
+          - AttributeName: "orderId"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "orderId"
+            KeyType: "HASH"
+        BillingMode: PAY_PER_REQUEST
