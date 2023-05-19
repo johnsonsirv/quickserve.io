@@ -1,7 +1,7 @@
 'use-strict';
 import { v4 as uuidv4 } from 'uuid'
 import { EVENT_TYPES } from '../constants'
-import { saveToDB } from '../services/dynamo'
+import { saveToDB, getFromDB } from '../services/dynamo'
 import { addToStream } from '../services/kinesis'
 import { sesSendMail } from '../services/ses'
 import {
@@ -55,9 +55,40 @@ const handleOrderNotifyThirdPartyProvider = (orders) => {
     return Promise.all(promises)
 }
 
+const handleFulfilOrderByThirdParty = ({ orderId, thirdPartyProviderId }) => {
+
+    return (
+        // TODO: fetch from in-memory cache
+        getFromDB({ keyName: 'orderId', keyValue: orderId, tableName: ORDER_TABLE_NAME })
+            .then((order) => {
+                if (!order) return;
+
+                const fulfilledOrder = {
+                    ...order,
+                    fulfillmentId: thirdPartyProviderId, // random id from third party device/system
+                    fulfillmentDate: Date.now(), 
+                    eventType: EVENT_TYPES.ORDER_FULFILLED,
+                };
+
+                return saveToDB({
+                    data: fulfilledOrder,
+                    tableName: ORDER_TABLE_NAME,
+                }).then(() => {
+                    return addToStream({
+                        data: fulfilledOrder,
+                        partitionKey: 'orderId',
+                        streamName: ORDER_STREAM_NAME,
+                })
+            })
+        })
+    )
+
+}
+
 module.exports = {
     handleCreateOrder,
     orderMapper,
     handleOrderNotifyThirdPartyProvider,
+    handleFulfilOrderByThirdParty,
 }
 

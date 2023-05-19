@@ -11,6 +11,20 @@ function saveToDB({ data, tableName }) {
     return dynamodb.put(params).promise()
 }
 
+function getFromDB ({ keyValue, tableName, keyName }) {
+    const params = {
+        TableName: tableName,
+        Key: {
+            [keyName]: keyValue
+        },
+    }
+
+    return dynamodb.get(params)
+        .promise()
+        .then((data) => data.Item) // TODO: cache this data
+}
+
 module.exports = {
     saveToDB,
+    getFromDB,
 }

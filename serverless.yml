@@ -47,6 +47,15 @@ functions:
       region: ${self.provider.region}
       thirdPartyEmailAddress: thirdpartyprovider@grr.la
       noReplyEmailAddress: no-reply-order-serverlessly-system@grr.la
+  fulfilOrderByThirdParty:
+    handler: handler.fulfilOrderByThirdParty
+    events:
+      - httpApi:
+          path: /order/third-party/fulfill
+          method: post
+    environment:
+      orderTableName: orders
+      orderStreamName: order-events
 
 resources:
   Resources:

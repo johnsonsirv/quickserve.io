@@ -21,7 +21,7 @@ const sesSendMail = ({ toAddress, fromAddress, orderItem }) => {
                 },
             },
         },
-        Source: fromAddress
+        Source: fromAddress,
     }
 
     return (

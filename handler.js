@@ -6,7 +6,8 @@ import {
 import {
   handleCreateOrder,
   orderMapper,
-  handleOrderNotifyThirdPartyProvider
+  handleOrderNotifyThirdPartyProvider,
+  handleFulfilOrderByThirdParty,
 } from './src/model/order';
 import { createAPIGatewayResponse } from './src/utils';
 
@@ -31,4 +32,23 @@ module.exports.notifyThirdPartyProvider = async (event) => {
   handleOrderNotifyThirdPartyProvider(orders)
     .then(() => { return 'Email Notification Sent' })
     .catch((error) => { return error })
+}
+
+module.exports.fulfilOrderByThirdParty = async (event) => {
+  const req = JSON.parse(event.body)
+
+  handleFulfilOrderByThirdParty({
+    orderId: req.orderId,
+    thirdPartyProviderId: req.thirdPartyProviderId,
+  })
+    .then(() => {
+      return createAPIGatewayResponse({
+        statusCode: 200,
+        message: `Fulfilled Order "${orderId}" sent to delivery!`
+      })
+    })
+    .catch((error) => {
+      return createAPIGatewayResponse({ statusCode: 400, message: error })
+    })
+
 }
