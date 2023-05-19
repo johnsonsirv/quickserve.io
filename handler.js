@@ -1,5 +1,13 @@
 'use strict';
-import { handleCreateOrder, orderMapper } from './src/model/order';
+import {
+  orderLogicFilterOrdersCreated,
+  orderLogicGetOrdersFromStream
+} from './src/logic/order';
+import {
+  handleCreateOrder,
+  orderMapper,
+  handleOrderNotifyThirdPartyProvider
+} from './src/model/order';
 import { createAPIGatewayResponse } from './src/utils';
 
 module.exports.createOrder = async (event) => {
@@ -12,3 +20,15 @@ module.exports.createOrder = async (event) => {
     return createAPIGatewayResponse({ statusCode: 400, message: error });
   });
 };
+
+
+module.exports.notifyThirdPartyProvider = async (event) => {
+  const records = orderLogicGetOrdersFromStream(event);
+  const orders = orderLogicFilterOrdersCreated(records);
+
+  if (orders.length <= 0) return;
+
+  handleOrderNotifyThirdPartyProvider(orders)
+    .then(() => { return 'Email Notification Sent' })
+    .catch((error) => { return error })
+}

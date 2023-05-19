@@ -16,6 +16,15 @@ functions:
     environment:
       orderTableName: orders
       orderStreamName: order-events
+  notifyThirdPartyProvider:
+    handler: handler.notifyThirdPartyProvider
+    events:
+      - stream
+          arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+    environment:
+      region: ${self.provider.region}
+      thirdPartyEmailAddress: thirdpartyprovider@grr.la
+      noReplyEmailAddress: no-reply-order-serverlessly-system@grr.la
 
 resources:
   Resources:
