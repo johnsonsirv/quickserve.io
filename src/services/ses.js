@@ -1,7 +1,9 @@
 'use-strict'
 import * as SES from 'aws-sdk/clients/ses'
+import { ses as sesConfig } from '../config'
+
 const ses = new SES({
-    region: process.env.region,
+    region: sesConfig.region,
 });
 
 const sesSendMail = ({ toAddress, fromAddress, orderItem }) => {

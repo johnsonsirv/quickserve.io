@@ -7,6 +7,7 @@ module.exports = {
     },
 
     ses: {
+        region: process.env.region || 'us-east-1',
         thirdPartyEmailAddress: process.env.thirdPartyEmailAddress || 'thirdpartyprovider@grr.la',
         noReplyEmailAddress: process.env.noReplyEmailAddress || 'no-reply-order-serverlessly-system@grr.la'
     }
