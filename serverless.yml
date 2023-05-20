@@ -38,8 +38,8 @@ functions:
     environment:
       orderTableName: orders
       orderStreamName: order-events
-  notifyThirdPartyProvider:
-    handler: handler.notifyThirdPartyProvider
+  notifyThirdPartyProviders:
+    handler: handler.notifyThirdPartyProviders
     events:
       - stream
           arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
@@ -75,3 +75,8 @@ resources:
           - AttributeName: "orderId"
             KeyType: "HASH"
         BillingMode: PAY_PER_REQUEST
+    thirdPartyQueue:
+      Type: AWS::SQS:Queue
+      Properties:
+        QueueName: third-party-queue
+
