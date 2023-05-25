@@ -6,7 +6,7 @@ const ses = new SES({
     region: sesConfig.region,
 });
 
-const sesSendMail = ({ toAddress, fromAddress, orderItem }) => {
+const sesSendMail = ({ toAddress, fromAddress, data }) => {
     const params = {
         Destination: {
             ToAddress: [toAddress]
@@ -17,7 +17,7 @@ const sesSendMail = ({ toAddress, fromAddress, orderItem }) => {
             },
             Body: {
                 Text: {
-                    Data: JSON.stringify(orderItem)
+                    Data: data,
                 },
             },
         },

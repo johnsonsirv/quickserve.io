@@ -1,13 +1,15 @@
 'use strict';
 import {
   orderLogicFilterOrdersCreated,
+  orderLogicFilterOrdersFulfilled,
   orderLogicGetOrdersFromStream
 } from './src/logic/order';
 import {
   handleCreateOrder,
   orderMapper,
-  handleOrderNotifyThirdPartyProvider,
+  handleNotifyThirdPartyProducer,
   handleFulfilOrderByThirdParty,
+  handleNotifyThirdPartyDelivery,
 } from './src/model/order';
 import { createAPIGatewayResponse } from './src/utils';
 
@@ -23,15 +25,22 @@ module.exports.createOrder = async (event) => {
 };
 
 
-module.exports.notifyThirdPartyProvider = async (event) => {
+module.exports.notifyThirdPartyProviders = async (event) => {
   const records = orderLogicGetOrdersFromStream(event);
-  const orders = orderLogicFilterOrdersCreated(records);
+  
+  const ordersCreated = orderLogicFilterOrdersCreated(records);
+  const ordersFulfilled = orderLogicFilterOrdersFulfilled(records);
 
-  if (orders.length <= 0) return;
+  // Handle all notifications
+  const thirdPartyProducerNotifications = handleNotifyThirdPartyProducer({ orders: ordersCreated })
+  const thirdPartyDeliveryNotifications = handleNotifyThirdPartyDelivery({ orders: ordersFulfilled })
 
-  handleOrderNotifyThirdPartyProvider(orders)
-    .then(() => { return 'Email Notification Sent' })
-    .catch((error) => { return error })
+  return Promise.all([
+    thirdPartyProducerNotifications,
+    thirdPartyDeliveryNotifications
+  ])
+  .then(() => 'All notifications sent')
+  .catch((error) => error)
 }
 
 module.exports.fulfilOrderByThirdParty = async (event) => {

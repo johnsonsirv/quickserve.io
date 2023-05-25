@@ -1,19 +1,22 @@
 'use-strict';
 import { v4 as uuidv4 } from 'uuid'
-import { EVENT_TYPES } from '../constants'
+import { EVENT_TYPES, ORDER_DELIVERY_STATUS } from '../constants'
 import { saveToDB, getFromDB } from '../services/dynamo'
 import { addToStream } from '../services/kinesis'
 import { sesSendMail } from '../services/ses'
+import { sqsEnqueue } from '../services/sqs'
 import {
     kinesis as kinesisConfig,
     dynamodb as dynamodbConfig,
     ses as sesConfig,
+    sqs as sqsConfig,
 } from '../config'
 
 const ORDER_STREAM_NAME = kinesisConfig.orderStreamName
 const ORDER_TABLE_NAME = dynamodbConfig.orderTableName;
 const THIRD_PARTY_EMAIL_ADDRESS = sesConfig.thirdPartyEmailAddress
 const NO_REPLY_EMAIL_ADDRESS = sesConfig.noReplyEmailAddress
+const THIRD_PARTY_QUEUE_NAME = sqsConfig.thirdPartyQueueName
 
 
 const orderMapper = (params) => {
@@ -45,14 +48,42 @@ const handleCreateOrder = (order) => {
     });
 }
 
-const handleOrderNotifyThirdPartyProvider = (orders) => {
+const handleNotifyThirdPartyProducer = ({ orders }) => {
+    if (Array.isArray(orders) && orders.length <= 0) return null;
+
     const promises = orders.map((order) => sesSendMail({ 
-             toAddress: THIRD_PARTY_EMAIL_ADDRESS,
-             fromAddress: NO_REPLY_EMAIL_ADDRESS,
-             orderItem: order,
-        }));
+        toAddress: THIRD_PARTY_EMAIL_ADDRESS,
+        fromAddress: NO_REPLY_EMAIL_ADDRESS,
+        data: JSON.stringify(order),
+   }));
 
     return Promise.all(promises)
+}
+
+const handleNotifyThirdPartyDelivery = ({ orders }) => {
+    if (Array.isArray(orders) && orders.length <= 0) return null;
+    
+    const promises = orders.map((order) => {
+        // TODO: Consistency? add lookup step, but from cache.
+        // ?? No need ?? no http request, exchange within AWS system
+        const orderForDelivery = {
+            ...order,
+            deliveryStatus: ORDER_DELIVERY_STATUS.ENQUEUE,
+            sentToDeliveryDate: Date.now(),
+            eventType: EVENT_TYPES.ORDER_SENT_TO_DELIVERY
+        };
+
+        saveToDB({ data: orderForDelivery, tableName: ORDER_TABLE_NAME })
+            .then(() => {
+                sqsEnqueue({
+                    message: JSON.stringify(orderForDelivery),
+                    queueUrl: THIRD_PARTY_QUEUE_NAME,
+                })
+            })
+    });
+
+
+   return Promise.all(promises)
 }
 
 const handleFulfilOrderByThirdParty = ({ orderId, thirdPartyProviderId }) => {
@@ -88,7 +119,8 @@ const handleFulfilOrderByThirdParty = ({ orderId, thirdPartyProviderId }) => {
 module.exports = {
     handleCreateOrder,
     orderMapper,
-    handleOrderNotifyThirdPartyProvider,
+    handleNotifyThirdPartyProducer,
+    handleNotifyThirdPartyDelivery,
     handleFulfilOrderByThirdParty,
 }
 

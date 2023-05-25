@@ -18,7 +18,15 @@ const orderLogicFilterOrdersCreated = (orders) => {
     )
 }
 
+const orderLogicFilterOrdersFulfilled = (orders) => {
+    return (
+        orders
+            .filter((order) => order.eventType === EVENT_TYPES.ORDER_FULFILLED)
+    )
+}
+
 module.exports = {
     orderLogicGetOrdersFromStream,
     orderLogicFilterOrdersCreated,
+    orderLogicFilterOrdersFulfilled,
 }
