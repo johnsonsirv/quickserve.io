@@ -27,6 +27,11 @@ iamRoleStatements:
       StringEquals:
         ses:FromAddress:
           - no-reply-order-serverlessly-system@grr.la
+  - Effect: Allow
+    Action:
+      - sqs:SendMessage
+    Resource:
+      - arn:aws:sqs:#{AWS::Region}:#{AWS::AccountId}:third-party-queue
 
 functions:
   createOrder:
@@ -47,6 +52,8 @@ functions:
       region: ${self.provider.region}
       thirdPartyEmailAddress: thirdpartyprovider@grr.la
       noReplyEmailAddress: no-reply-order-serverlessly-system@grr.la
+      thirdPartyQueue:
+        Ref: thirdPartyQueue
   fulfilOrderByThirdParty:
     handler: handler.fulfilOrderByThirdParty
     events:
