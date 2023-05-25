@@ -24,7 +24,6 @@ module.exports.createOrder = async (event) => {
   });
 };
 
-
 module.exports.notifyThirdPartyProviders = async (event) => {
   const records = orderLogicGetOrdersFromStream(event);
   
@@ -60,4 +59,10 @@ module.exports.fulfilOrderByThirdParty = async (event) => {
       return createAPIGatewayResponse({ statusCode: 400, message: error })
     })
 
+}
+
+module.exports.notifyExternalDeliveryService =  async () => {
+  console.log('HTTP call to external delivery service');
+
+  return 'done'
 }

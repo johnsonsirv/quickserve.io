@@ -63,6 +63,15 @@ functions:
     environment:
       orderTableName: orders
       orderStreamName: order-events
+  notifyExternalDeliveryService:
+    handler: handler.notifyExternalDeliveryService
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - thirdPartyQueue
+              - Arn
+          batchSize: 10 # notify when min 10 orders are ready for delivery
 
 resources:
   Resources:
