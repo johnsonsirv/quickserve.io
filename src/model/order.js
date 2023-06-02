@@ -17,6 +17,7 @@ const ORDER_TABLE_NAME = dynamodbConfig.orderTableName;
 const THIRD_PARTY_EMAIL_ADDRESS = sesConfig.thirdPartyEmailAddress
 const NO_REPLY_EMAIL_ADDRESS = sesConfig.noReplyEmailAddress
 const THIRD_PARTY_QUEUE_NAME = sqsConfig.thirdPartyQueueName
+const CUSTOMER_SERVICE_QUEUE_NAME = sqsConfig.customerServiceQueue
 
 
 const orderMapper = (params) => {
@@ -78,6 +79,7 @@ const handleNotifyThirdPartyDelivery = ({ orders }) => {
                 sqsEnqueue({
                     message: JSON.stringify(orderForDelivery),
                     queueUrl: THIRD_PARTY_QUEUE_NAME,
+                    queueUrl: THIRD_PARTY_QUEUE_NAME,
                 })
             })
     });
@@ -116,11 +118,45 @@ const handleFulfilOrderByThirdParty = ({ orderId, thirdPartyProviderId }) => {
 
 }
 
+const handleOrderDelivered = ({ orderId, thirdPartyProviderId, orderReview }) => {
+    // TODO: consider data validation
+
+    return (
+        getFromDB({ keyName: 'orderId', keyValue: orderId, tableName: ORDER_TABLE_NAME })
+         .then((order) => {
+            if (!order) return;
+
+            const orderDelivered = {
+                ...order,
+                deliveryId: thirdPartyProviderId,
+                deliveryStatus: ORDER_DELIVERY_STATUS.DELIVERED,
+                deliveryDate: Date.now(),
+                eventType: EVENT_TYPES.ORDER_DELIVERED,
+            }
+
+            return saveToDB({
+                data: orderDelivered,
+                tableName: ORDER_TABLE_NAME,
+            }).then(() => {
+                return sqsEnqueue({
+                    message: JSON.stringify({
+                        orderId,
+                        orderReview,
+                        orderReviewDate: Date.now(),
+                    }),
+                    queueUrl: CUSTOMER_SERVICE_QUEUE_NAME,
+                })
+              })
+         })
+    )
+}
+
 module.exports = {
     handleCreateOrder,
     orderMapper,
     handleNotifyThirdPartyProducer,
     handleNotifyThirdPartyDelivery,
     handleFulfilOrderByThirdParty,
+    handleOrderDelivered,
 }
 

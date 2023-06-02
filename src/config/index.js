@@ -13,6 +13,7 @@ module.exports = {
     },
     sqs: {
         region: process.env.region || 'us-east-1',
-        thirdPartyQueueName: process.env.thirdPartyQueue || 'third-party-queue'
+        thirdPartyQueueName: process.env.thirdPartyQueue || 'third-party-queue',
+        customerServiceQueue: process.env.customerServiceQueue || 'customer-service-queue'
     }
 }

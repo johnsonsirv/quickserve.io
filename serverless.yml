@@ -32,6 +32,7 @@ iamRoleStatements:
       - sqs:SendMessage
     Resource:
       - arn:aws:sqs:#{AWS::Region}:#{AWS::AccountId}:third-party-queue
+      - arn:aws:sqs:#{AWS::Region}:#{AWS::AccountId}:customer-service-queue
 
 functions:
   createOrder:
@@ -72,6 +73,16 @@ functions:
               - thirdPartyQueue
               - Arn
           batchSize: 10 # notify when min 10 orders are ready for delivery
+  deliverOrderByThirdParty:
+    handler: handler.deliverOrderByThirdParty
+    events:
+      - httpApi:
+          path: /order/third-party/delivered
+          method: post
+    environment:
+      orderTableName: orders
+      customerServiceQueue:
+        Ref: customerServiceQueue
 
 resources:
   Resources:
@@ -95,4 +106,8 @@ resources:
       Type: AWS::SQS:Queue
       Properties:
         QueueName: third-party-queue
+    customerServiceQueue:
+      Type: AWS::SQS:Queue
+      Properties:
+        QueueName: customer-service-queue
 
