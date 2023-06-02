@@ -76,8 +76,14 @@ module.exports.deliverOrderByThirdParty = async(event) => {
     thirdPartyDeliveryId: req.thirdPartyDeliveryId,
     orderReview: req.orderReview,
   }).then(() => {
-    return createAPIGatewayResponse({ statusCode: 200, message: `Order Delivered by ${req.thirdPartyDeliveryId}` })
+    return createAPIGatewayResponse({ statusCode: 200, message: `Order ${req.orderId} Delivered by ${req.thirdPartyDeliveryId}` })
   }).catch((error) => {
     return createAPIGatewayResponse({ statusCode: 400, message: error });
   })
+}
+
+module.exports.notifyCustomerService = async (event) => {
+  console.log('HTTP call to external customer service endpoint');
+
+  return 'done'
 }

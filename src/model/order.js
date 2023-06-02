@@ -138,6 +138,7 @@ const handleOrderDelivered = ({ orderId, thirdPartyProviderId, orderReview }) =>
                 data: orderDelivered,
                 tableName: ORDER_TABLE_NAME,
             }).then(() => {
+                // TODO: consider notifying customer service only when rating is available
                 return sqsEnqueue({
                     message: JSON.stringify({
                         orderId,

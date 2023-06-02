@@ -83,6 +83,15 @@ functions:
       orderTableName: orders
       customerServiceQueue:
         Ref: customerServiceQueue
+  notifyCustomerService:
+    handler: handler.notifyCustomerService
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - customerServiceQueue
+              - Arn
+          batchSize: 10 # only when 10 orders are delivered successfully
 
 resources:
   Resources:
