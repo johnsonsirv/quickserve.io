@@ -6,7 +6,7 @@
   "scripts": {},
   "keywords": ["serverless", "microservice", "marketplace", "e-commerce", "order"],
   "author": "Victor Okeugo",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.1377.0",
     "uuid": "^9.0.0"
